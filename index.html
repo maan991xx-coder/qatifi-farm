@@ -471,6 +471,29 @@ const askMsg = "السلام عليكم، عندي استفسار عن منتج�
 ["askTop","askHero","askBox"].forEach(id=>$(id).href=wa(ASK_NUM,askMsg));
 $("orderBox").href = wa(ORDER_NUM,"السلام عليكم، أبغى أطلب من منتجات مزرعة القطيفي.");
 
+/* Open the WhatsApp app directly (like Instagram ads) with the message ready.
+   On the real site: phones go straight into the app; computers open WhatsApp Web/Desktop.
+   Inside an embedded preview we leave the normal link alone. */
+const isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const embedded = (()=>{ try{ return window.top !== window.self; }catch(e){ return true; } })();
+function openWhatsApp(link){
+  const u = new URL(link); const phone = u.pathname.replace(/\D/g,""); const text = u.searchParams.get("text")||"";
+  const q = "phone=" + phone + "&text=" + encodeURIComponent(text);
+  if(isPhone){
+    window.location.href = "whatsapp://send?" + q;
+    setTimeout(()=>{ if(!document.hidden) window.location.href = "https://api.whatsapp.com/send?" + q; }, 1600);
+  } else {
+    const w = window.open("https://api.whatsapp.com/send?" + q, "_blank");
+    if(!w) window.location.href = "https://api.whatsapp.com/send?" + q;
+  }
+}
+document.addEventListener("click", e=>{
+  const a = e.target.closest('a[href^="https://wa.me/"]');
+  if(!a || embedded) return;
+  if(a.id==="orderBtn"){ if(!cart.length){ e.preventDefault(); return; } a.href = wa(ORDER_NUM, orderText()); }
+  e.preventDefault(); openWhatsApp(a.href);
+});
+
 renderTabs(); renderShop(); renderCart();
 </script>
 
